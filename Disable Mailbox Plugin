@@ -1,0 +1,36 @@
+<?php
+/*
+Plugin Name: Disable Email Login and Verification
+Description: 全局禁用邮箱登录和邮箱验证功能
+Version: 1.0
+Author: Your Name
+*/
+
+if (!defined('ABSPATH')) {
+    exit; // 防止直接访问文件
+}
+
+// 禁用邮箱登录功能
+function disable_email_login($user, $password) {
+    if (is_email($user->user_login)) {
+        return new WP_Error('email_login_disabled', __('邮箱登录已被禁用，请使用用户名登录。'));
+    }
+    return $user;
+}
+add_filter('wp_authenticate_user', 'disable_email_login', 10, 2);
+
+// 禁用邮箱验证功能
+function disable_email_verification($sanitized_user_login, $user_email, $errors) {
+    if (!empty($user_email)) {
+        $user_email = $sanitized_user_login . '@invalid.com';
+    }
+    return $user_email;
+}
+add_filter('pre_user_email', 'disable_email_verification', 10, 3);
+
+// 移除电子邮件验证相关的字段
+function remove_email_fields($contactmethods) {
+    unset($contactmethods['email']);
+    return $contactmethods;
+}
+add_filter('user_contactmethods', 'remove_email_fields');
